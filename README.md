@@ -1,6 +1,6 @@
 # AkinatorTelegramBot
  
-A Telegram Bot implementation of the Akinator API.
+A Telegram Bot implementation of the Akinator API (https://ru.akinator.com/ | https://en.akinator.com/).
 
 Inspired by:
 - https://github.com/jgoralcz/aki-api (JS implementation)
