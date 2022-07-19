@@ -87,7 +87,7 @@ namespace Akinator.Api
             Task action = callbackQuery.Data switch
             {
                 "new-game" => _mediator.Send(new StartNewGameRequest(callbackQuery)),
-                _ when callbackQuery.Data.StartsWith("answer:") => _mediator.Send(new AnswerRequest(callbackQuery)),
+                _ when callbackQuery.Data.StartsWith("answer:") => _mediator.Send(new MakeAnswerRequest(callbackQuery)),
                 _ => _mediator.Send(new UsageCommandRequest(callbackQuery.Message))
             };
 

@@ -12,19 +12,19 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Akinator.Api.Handlers
 {
-    internal class AnswerCallbackHandler : IRequestHandler<AnswerRequest>
+    internal class MakeAnswerHandler : IRequestHandler<MakeAnswerRequest>
     {
         private readonly ITelegramBotClient _botClient;
         private readonly GameStore _games;
 
-        public AnswerCallbackHandler(ITelegramBotClient botClient,
+        public MakeAnswerHandler(ITelegramBotClient botClient,
                                      GameStore games)
         {
             _botClient = botClient;
             _games = games;
         }
 
-        public async Task<Unit> Handle(AnswerRequest request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(MakeAnswerRequest request, CancellationToken cancellationToken)
         {
             var callbackQuery = request.CallbackQuery;
             var game = _games.Get(callbackQuery.Message.Chat.Id.ToString());

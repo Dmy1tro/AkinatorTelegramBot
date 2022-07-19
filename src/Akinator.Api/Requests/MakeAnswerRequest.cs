@@ -3,9 +3,9 @@ using Telegram.Bot.Types;
 
 namespace Akinator.Api.Requests
 {
-    internal class AnswerRequest : IRequest
+    internal class MakeAnswerRequest : IRequest
     {
-        public AnswerRequest(CallbackQuery callbackQuery)
+        public MakeAnswerRequest(CallbackQuery callbackQuery)
         {
             CallbackQuery = callbackQuery;
         }
