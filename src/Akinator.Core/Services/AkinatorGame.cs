@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Akinator.Core.Exceptions;
 using Akinator.Core.Helpers;
@@ -12,12 +11,12 @@ namespace Akinator.Core.Services
 {
     internal class AkinatorGame : IAkinatorGame
     {
-        private readonly HttpClient _httpClient;
+        private readonly IAkinatorHttpClient _akinatorHttpClient;
         private readonly GameState _gameState;
 
-        public AkinatorGame(HttpClient httpClient, GameState gameState)
+        public AkinatorGame(IAkinatorHttpClient akinatorHttpClient, GameState gameState)
         {
-            _httpClient = httpClient;
+            _akinatorHttpClient = akinatorHttpClient;
             _gameState = gameState;
         }
 
@@ -26,17 +25,17 @@ namespace Akinator.Core.Services
             return _gameState.StepInformation.Question;
         }
 
-        public ICollection<string> GetAnswers()
+        public IList<Answer> GetAnswers()
         {
-            return _gameState.StepInformation.Answers.Select(a => a.Text).ToList();
+            return _gameState.StepInformation.Answers.Select((a, i) => new Answer { Text = a.Text, Id = i }).ToList();
         }
 
         public async Task Answer(int answerId)
         {
             var url = AkinatorUrlBuilder.Answer(_gameState, answerId);
-            var stepResponse = await _httpClient.GetAkinatorCallbackResponse<StepResponse>(url);
+            var stepResponse = await _akinatorHttpClient.GetCallbackResponse<StepResponse>(url);
 
-            Validate(stepResponse.Completion);
+            ValidateStepResponse(stepResponse);
 
             _gameState.StepInformation = stepResponse.Parameters.ToStepInformation();
         }
@@ -44,24 +43,34 @@ namespace Akinator.Core.Services
         public async Task Back()
         {
             var url = AkinatorUrlBuilder.Back(_gameState);
-            var stepResponse = await _httpClient.GetAkinatorCallbackResponse<StepResponse>(url);
+            var stepResponse = await _akinatorHttpClient.GetCallbackResponse<StepResponse>(url);
 
-            Validate(stepResponse.Completion);
+            ValidateStepResponse(stepResponse);
 
             _gameState.StepInformation = stepResponse.Parameters.ToStepInformation();
         }
 
+        public int GetStep()
+        {
+            return int.Parse(_gameState.StepInformation.Step);
+        }
+
+        public float GetProgress()
+        {
+            return float.Parse(_gameState.StepInformation.Progression);
+        }
+
         public bool CanGuess()
         {
-            var progression = float.Parse(_gameState.StepInformation.Progression);
+            var progression = GetProgress();
 
             return progression > 90;
         }
 
-        public async Task<ICollection<GuessedItem>> Win()
+        public async Task<IList<GuessedItem>> Win()
         {
             var url = AkinatorUrlBuilder.Win(_gameState);
-            var winResponse = await _httpClient.GetAkinatorCallbackResponse<WinResponse>(url);
+            var winResponse = await _akinatorHttpClient.GetCallbackResponse<WinResponse>(url);
 
             var guessedItems = winResponse.Parameters.Elements
                 .Select(e => e.Element)
@@ -73,12 +82,12 @@ namespace Akinator.Core.Services
             return guessedItems;
         }
 
-        private void Validate(string completion)
+        private void ValidateStepResponse(StepResponse response)
         {
-            if (completion.ToUpper() != "OK")
+            if (!response.IsSuccess)
             {
                 // TODO: provide message.
-                throw new AkinatorException();
+                throw new AkinatorException("Failed to proceed action.");
             }
         }
     }

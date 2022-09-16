@@ -49,17 +49,17 @@ namespace Akinator.Api.Handlers
             {
                 new ()
                 {
-                    InlineKeyboardButton.WithCallbackData(answers[0], "answer:0"),
-                    InlineKeyboardButton.WithCallbackData(answers[1], "answer:1"),
+                    InlineKeyboardButton.WithCallbackData(answers[0].Text, $"answer:{answers[0].Id}"),
+                    InlineKeyboardButton.WithCallbackData(answers[1].Text, $"answer:{answers[1].Id}"),
                 },
                 new()
                 {
-                    InlineKeyboardButton.WithCallbackData(answers[2], "answer:2"),
-                    InlineKeyboardButton.WithCallbackData(answers[3], "answer:3"),
+                    InlineKeyboardButton.WithCallbackData(answers[2].Text, $"answer:{answers[2].Id}"),
+                    InlineKeyboardButton.WithCallbackData(answers[3].Text, $"answer:{answers[3].Id}"),
                 },
                 new()
                 {
-                    InlineKeyboardButton.WithCallbackData(answers[4], "answer:4"),
+                    InlineKeyboardButton.WithCallbackData(answers[4].Text, $"answer:{answers[4].Id}"),
                 }
             };
 

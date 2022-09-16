@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using Newtonsoft.Json;
 
 namespace Akinator.Core.Models.AkinatorResponse
 {
@@ -9,5 +10,8 @@ namespace Akinator.Core.Models.AkinatorResponse
 
         [JsonProperty("parameters")]
         public StepParameters Parameters { get; set; }
+
+        [JsonIgnore]
+        public bool IsSuccess => Completion.Equals("OK", StringComparison.InvariantCultureIgnoreCase);
     }
 }

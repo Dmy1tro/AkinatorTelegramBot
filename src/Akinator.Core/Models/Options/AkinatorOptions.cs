@@ -2,6 +2,6 @@
 {
     public class AkinatorOptions
     {
-        public Region Region { get; set; } = Region.Ru;
+        public Region Region { get; set; } = Region.En;
     }
 }

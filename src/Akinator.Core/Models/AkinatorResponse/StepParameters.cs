@@ -9,7 +9,7 @@ namespace Akinator.Core.Models.AkinatorResponse
         public string Question { get; set; }
 
         [JsonProperty("answers")]
-        public List<Answer> Answers { get; set; }
+        public List<AnswerResponse> Answers { get; set; }
 
         [JsonProperty("step")]
         public string Step { get; set; }

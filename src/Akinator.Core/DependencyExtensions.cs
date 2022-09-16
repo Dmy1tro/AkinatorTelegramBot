@@ -9,7 +9,7 @@ namespace Akinator.Core
 {
     public static class DependencyExtensions
     {
-        public static void AddAkinator(this IServiceCollection services, Action<AkinatorOptions> configure = null)
+        public static IServiceCollection AddAkinator(this IServiceCollection services, Action<AkinatorOptions> configure = null)
         {
             services.AddHttpClient("akinator", client =>
             {
@@ -26,11 +26,13 @@ namespace Akinator.Core
                 });
             });
 
-            var options = new AkinatorOptions();
-            configure?.Invoke(options);
+            configure ??= (options) => { };
 
-            services.AddSingleton<AkinatorOptions>(options);
+            services.AddOptions<AkinatorOptions>().Configure(configure);
+            services.AddTransient<IAkinatorHttpClient, AkinatorHttpClient>();
             services.AddTransient<IAkinatorClient, AkinatorClient>();
+
+            return services;
         }
     }
 }

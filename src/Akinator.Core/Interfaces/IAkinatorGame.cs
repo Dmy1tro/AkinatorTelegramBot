@@ -8,7 +8,7 @@ namespace Akinator.Core.Interfaces
     {
         string GetQuestion();
 
-        ICollection<string> GetAnswers();
+        IList<Answer> GetAnswers();
 
         Task Answer(int answerId);
 
@@ -16,6 +16,10 @@ namespace Akinator.Core.Interfaces
 
         bool CanGuess();
 
-        Task<ICollection<GuessedItem>> Win();
+        float GetProgress();
+
+        int GetStep();
+
+        Task<IList<GuessedItem>> Win();
     }
 }
