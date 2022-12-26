@@ -1,33 +1,37 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using Akinator.Api.Models;
 using Akinator.Api.Requests;
 using MediatR;
+using Newtonsoft.Json;
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Akinator.Api.Handlers
 {
-    internal class StartCommandHandler : IRequestHandler<StartCommandRequest>
+    internal class StartHandler : IRequestHandler<StartRequest>
     {
         private readonly ITelegramBotClient _botClient;
 
-        public StartCommandHandler(ITelegramBotClient botClient)
+        public StartHandler(ITelegramBotClient botClient)
         {
             _botClient = botClient;
         }
 
-        public async Task<Unit> Handle(StartCommandRequest request, CancellationToken cancellationToken)
+        public async Task<Unit> Handle(StartRequest request, CancellationToken cancellationToken)
         {
-            var message = request.Message;
-            const string whatBotDoes = "Бот попытается угадать то что вы загадали.";
+            const string whatBotDoes = "The bot will try to guess what you defined.";
 
             var inlineKeyboardMarkup = new InlineKeyboardMarkup(
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("Начать новую игру!", "new-game")
+                    InlineKeyboardButton.WithCallbackData("Start a new game!", JsonConvert.SerializeObject(new CallbackData
+                    {
+                        Request = StartNewGameRequest.RequestName
+                    }))
                 });
 
-            await _botClient.SendTextMessageAsync(chatId: message.Chat.Id,
+            await _botClient.SendTextMessageAsync(chatId: request.ChatId,
                                                   text: whatBotDoes,
                                                   replyMarkup: inlineKeyboardMarkup,
                                                   cancellationToken: cancellationToken);

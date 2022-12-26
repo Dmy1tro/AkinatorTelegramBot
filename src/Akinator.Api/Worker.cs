@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Akinator.Api.Models;
 using Akinator.Api.Requests;
 using Akinator.Core.Exceptions;
 using MediatR;
+using Newtonsoft.Json;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
@@ -28,6 +30,7 @@ namespace Akinator.Api
             Console.Title = me.Username ?? "My awesome Bot";
 
             using var cts = new CancellationTokenSource();
+            var tcs = new TaskCompletionSource();
 
             _bot.StartReceiving(updateHandler: HandleUpdate,
                                pollingErrorHandler: HandlePollingError,
@@ -39,10 +42,12 @@ namespace Akinator.Api
 
             Console.WriteLine("Startup is done!");
 
-            while (!cts.IsCancellationRequested)
+            cts.Token.Register(() =>
             {
-                await Task.Delay(TimeSpan.FromSeconds(10));
-            }
+                tcs.SetResult();
+            });
+
+            await tcs.Task;
         }
 
         private async Task HandleUpdate(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
@@ -71,27 +76,49 @@ namespace Akinator.Api
             if (message.Type != MessageType.Text)
                 return;
 
+            var chatId = message.Chat.Id;
+
             Task action = message.Text!.Trim() switch
             {
-                "/start" => _mediator.Send(new StartCommandRequest(message)),
-                _ => _mediator.Send(new UsageCommandRequest(message))
+                StartRequest.RequestName => _mediator.Send(new StartRequest(chatId)),
+                _ => _mediator.Send(new HowToUseRequest(chatId))
             };
 
-            await action;
+            try
+            {
+                await action;
+            }
+            catch (Exception ex)
+            {
+                PrintErrorToConsole(ex);
+            }
 
             Console.WriteLine($"The message was sent with id: {message.MessageId}");
         }
 
         private async Task BotOnCallbackQueryReceived(CallbackQuery callbackQuery)
         {
-            Task action = callbackQuery.Data switch
+            var chatId = callbackQuery.Message.Chat.Id;
+            var callbackData = JsonConvert.DeserializeObject<CallbackData>(callbackQuery.Data);
+
+            Task action = callbackData.Request switch
             {
-                "new-game" => _mediator.Send(new StartNewGameRequest(callbackQuery)),
-                _ when callbackQuery.Data.StartsWith("answer:") => _mediator.Send(new MakeAnswerRequest(callbackQuery)),
-                _ => _mediator.Send(new UsageCommandRequest(callbackQuery.Message))
+                StartNewGameRequest.RequestName => _mediator.Send(new StartNewGameRequest(chatId)),
+                MakeAnswerRequest.RequestName => _mediator.Send(new MakeAnswerRequest(chatId, callbackData))
             };
 
-            await action;
+            try
+            {
+                await action;
+            }
+            catch (Exception ex)
+            {
+                PrintErrorToConsole(ex);
+            }
+            finally
+            {
+                await _bot.AnswerCallbackQueryAsync(callbackQuery.Id);
+            }
 
             Console.WriteLine($"The message was sent with id: {callbackQuery.Message?.MessageId}");
         }
@@ -121,23 +148,16 @@ namespace Akinator.Api
             return Task.CompletedTask;
         }
 
-        private async Task HandleError(Exception exception, ChatId? chatId, CancellationToken cancellationToken)
+        private async Task HandleError(Exception exception, ChatId chatId, CancellationToken cancellationToken)
         {
             PrintErrorToConsole(exception);
 
-            if (chatId == null)
+            if (exception is AkinatorException)
             {
-                return;
+                var messageForUser = "Something went wrong. Please, try again. If this error appears again then start a new game by using /start command";
+
+                await _bot.SendTextMessageAsync(chatId, messageForUser, cancellationToken: cancellationToken);
             }
-
-            var errorMessage = exception switch
-            {
-                AkinatorException => "Something went wrong. Please, try again. If this error appears again then start a new game by using /start command",
-                _ => ""
-            };
-
-            if (!string.IsNullOrEmpty(errorMessage))
-                await _mediator.Send(new SendTextMessageRequest(chatId, errorMessage));
         }
 
         private void PrintErrorToConsole(Exception exception)

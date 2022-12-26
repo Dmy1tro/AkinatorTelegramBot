@@ -1,15 +1,16 @@
 ﻿using MediatR;
-using Telegram.Bot.Types;
 
 namespace Akinator.Api.Requests
 {
     internal class StartNewGameRequest : IRequest
     {
-        public StartNewGameRequest(CallbackQuery callbackQuery)
+        public const string RequestName = nameof(StartNewGameRequest);
+
+        public StartNewGameRequest(long chatId)
         {
-            CallbackQuery = callbackQuery;
+            ChatId = chatId;
         }
 
-        public CallbackQuery CallbackQuery { get; }
+        public long ChatId { get; }
     }
 }

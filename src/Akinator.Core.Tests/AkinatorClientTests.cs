@@ -1,5 +1,4 @@
 using Akinator.Core.Interfaces;
-using Akinator.Core.Models.Options;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Akinator.Core.Tests
@@ -9,11 +8,11 @@ namespace Akinator.Core.Tests
         private static readonly Random _random = new Random();
 
         [Fact]
-        public async Task Should_Proceed_Full_Flow_Successfully_When_EN_Region()
+        public async Task Should_Proceed_Full_Flow_Successfully()
         {
             // Arrange
             var services = new ServiceCollection()
-                .AddAkinator(options => options.Region = Region.En);
+                .AddAkinator();
             var provider = services.BuildServiceProvider();
             var client = provider.GetRequiredService<IAkinatorClient>();
             var totalSteps = 12;

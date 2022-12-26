@@ -5,9 +5,9 @@ namespace Akinator.Core.Helpers
 {
     internal static class AkinatorUrlBuilder
     {
-        public static string BaseUrl(string language)
+        public static string BaseUrl()
         {
-            return $"https://{language}.akinator.com";
+            return $"https://en.akinator.com";
         }
 
         public static string Session()

@@ -1,6 +1,5 @@
 ﻿using System;
 using Akinator.Core.Interfaces;
-using Akinator.Core.Models.Options;
 using Akinator.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Polly;
@@ -9,7 +8,7 @@ namespace Akinator.Core
 {
     public static class DependencyExtensions
     {
-        public static IServiceCollection AddAkinator(this IServiceCollection services, Action<AkinatorOptions> configure = null)
+        public static IServiceCollection AddAkinator(this IServiceCollection services)
         {
             services.AddHttpClient("akinator", client =>
             {
@@ -26,9 +25,6 @@ namespace Akinator.Core
                 });
             });
 
-            configure ??= (options) => { };
-
-            services.AddOptions<AkinatorOptions>().Configure(configure);
             services.AddTransient<IAkinatorHttpClient, AkinatorHttpClient>();
             services.AddTransient<IAkinatorClient, AkinatorClient>();
 

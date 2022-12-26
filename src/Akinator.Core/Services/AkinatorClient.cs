@@ -3,19 +3,15 @@ using Akinator.Core.Helpers;
 using Akinator.Core.Interfaces;
 using Akinator.Core.Models.AkinatorResponse;
 using Akinator.Core.Models.Game;
-using Akinator.Core.Models.Options;
-using Microsoft.Extensions.Options;
 
 namespace Akinator.Core.Services
 {
     internal class AkinatorClient : IAkinatorClient
     {
-        private readonly AkinatorOptions _options;
         private readonly IAkinatorHttpClient _akinatorHttpClient;
 
-        public AkinatorClient(IAkinatorHttpClient akinatorHttpClient, IOptions<AkinatorOptions> options)
+        public AkinatorClient(IAkinatorHttpClient akinatorHttpClient)
         {
-            _options = options.Value;
             _akinatorHttpClient = akinatorHttpClient;
         }
 
@@ -23,7 +19,7 @@ namespace Akinator.Core.Services
         {
             var gameState = new GameState();
 
-            gameState.BaseUrl = AkinatorUrlBuilder.BaseUrl(_options.Region.ToString().ToLower());
+            gameState.BaseUrl = AkinatorUrlBuilder.BaseUrl();
             gameState.RegionUrl = await _akinatorHttpClient.GetRegionUrl(gameState.BaseUrl);
             gameState.Session = await _akinatorHttpClient.GetSession(AkinatorUrlBuilder.Session());
 

@@ -1,15 +1,20 @@
-﻿using MediatR;
-using Telegram.Bot.Types;
+﻿using Akinator.Api.Models;
+using MediatR;
 
 namespace Akinator.Api.Requests
 {
     internal class MakeAnswerRequest : IRequest
     {
-        public MakeAnswerRequest(CallbackQuery callbackQuery)
+        public const string RequestName = nameof(MakeAnswerRequest);
+
+        public MakeAnswerRequest(long chatId, CallbackData callbackData)
         {
-            CallbackQuery = callbackQuery;
+            ChatId = chatId;
+            CallbackData = callbackData;
         }
 
-        public CallbackQuery CallbackQuery { get; }
+        public long ChatId { get; }
+
+        public CallbackData CallbackData { get; }
     }
 }
