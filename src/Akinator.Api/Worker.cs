@@ -1,11 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Akinator.Api.Models;
-using Akinator.Api.Requests;
+using Akinator.Api.Handlers;
 using Akinator.Core.Exceptions;
-using MediatR;
-using Newtonsoft.Json;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
@@ -16,12 +14,12 @@ namespace Akinator.Api
     internal class Worker
     {
         private readonly ITelegramBotClient _bot;
-        private readonly IMediator _mediator;
+        private readonly IEnumerable<ITelegramUpdateHandler> _telegramUpdateHandlers;
 
-        public Worker(ITelegramBotClient bot, IMediator mediator)
+        public Worker(ITelegramBotClient bot, IEnumerable<ITelegramUpdateHandler> telegramUpdateHandlers)
         {
             _bot = bot;
-            _mediator = mediator;
+            _telegramUpdateHandlers = telegramUpdateHandlers;
         }
 
         public async Task Start()
@@ -52,81 +50,20 @@ namespace Akinator.Api
 
         private async Task HandleUpdate(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
-            var handler = update.Type switch
+            foreach (var handler in _telegramUpdateHandlers)
             {
-                UpdateType.Message => BotOnMessageReceived(update.Message!),
-                UpdateType.CallbackQuery => BotOnCallbackQueryReceived(update.CallbackQuery!),
-
-                _ => UnknownUpdateHandlerAsync(update)
-            };
-
-            try
-            {
-                await handler;
+                if (handler.Support(update))
+                {
+                    try
+                    {
+                        await handler.Handle(update, cancellationToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        await HandleError(ex, GetChatId(update), cancellationToken);
+                    }
+                }
             }
-            catch (Exception exception)
-            {
-                await HandleError(exception, GetChatId(update), cancellationToken);
-            }
-        }
-
-        private async Task BotOnMessageReceived(Message message)
-        {
-            Console.WriteLine($"Receive message type: {message.Type}");
-            if (message.Type != MessageType.Text)
-                return;
-
-            var chatId = message.Chat.Id;
-
-            Task action = message.Text!.Trim() switch
-            {
-                StartRequest.RequestName => _mediator.Send(new StartRequest(chatId)),
-                _ => _mediator.Send(new HowToUseRequest(chatId))
-            };
-
-            try
-            {
-                await action;
-            }
-            catch (Exception ex)
-            {
-                PrintErrorToConsole(ex);
-            }
-
-            Console.WriteLine($"The message was sent with id: {message.MessageId}");
-        }
-
-        private async Task BotOnCallbackQueryReceived(CallbackQuery callbackQuery)
-        {
-            var chatId = callbackQuery.Message.Chat.Id;
-            var callbackData = JsonConvert.DeserializeObject<CallbackData>(callbackQuery.Data);
-
-            Task action = callbackData.Request switch
-            {
-                StartNewGameRequest.RequestName => _mediator.Send(new StartNewGameRequest(chatId)),
-                MakeAnswerRequest.RequestName => _mediator.Send(new MakeAnswerRequest(chatId, callbackData))
-            };
-
-            try
-            {
-                await action;
-            }
-            catch (Exception ex)
-            {
-                PrintErrorToConsole(ex);
-            }
-            finally
-            {
-                await _bot.AnswerCallbackQueryAsync(callbackQuery.Id);
-            }
-
-            Console.WriteLine($"The message was sent with id: {callbackQuery.Message?.MessageId}");
-        }
-
-        private Task UnknownUpdateHandlerAsync(Update update)
-        {
-            Console.WriteLine($"Unknown update type: {update.Type}");
-            return Task.CompletedTask;
         }
 
         private ChatId? GetChatId(Update update)

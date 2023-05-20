@@ -2,6 +2,10 @@
 {
     internal class CallbackData
     {
+        public const string MakeAnswerRequest = "MakeAnswerRequest";
+        public const string ShowPossibleGuesses = "ShowPossibleGuesses";
+        public const string StartNewGameRequest = "StartNewGameRequest";
+
         /// <summary>
         /// Who should process this callback data.
         /// </summary>

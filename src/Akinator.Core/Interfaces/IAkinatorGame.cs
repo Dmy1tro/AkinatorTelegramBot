@@ -21,5 +21,7 @@ namespace Akinator.Core.Interfaces
         int GetStep();
 
         Task<IList<GuessedItem>> Win();
+
+        GameSnapshot CreateSnapshot();
     }
 }

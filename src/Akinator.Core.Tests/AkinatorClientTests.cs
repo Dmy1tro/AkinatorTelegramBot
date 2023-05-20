@@ -1,12 +1,11 @@
 using Akinator.Core.Interfaces;
+using Akinator.Core.Models.Game;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Akinator.Core.Tests
 {
     public class AkinatorClientTests
     {
-        private static readonly Random _random = new Random();
-
         [Fact]
         public async Task Should_Proceed_Full_Flow_Successfully()
         {
@@ -22,6 +21,19 @@ namespace Akinator.Core.Tests
 
             var game = await client.StartNewGame();
             Assert.NotNull(game);
+
+            // Validate snapshot feature
+            var snapshot = game.CreateSnapshot();
+            var serializedSnapshot = snapshot.Serialize();
+            var deserializedSnapshot = GameSnapshot.Deserialize(serializedSnapshot);
+
+            Assert.Equal(snapshot.SnapshotId, deserializedSnapshot.SnapshotId);
+            Assert.Equal(snapshot.CreatedAt, deserializedSnapshot.CreatedAt);
+
+            var gameFromSnapshot = client.LoadGameFromSnapshot(deserializedSnapshot);
+
+            Assert.Equal(game.GetStep(), gameFromSnapshot.GetStep());
+            Assert.Equal(game.GetQuestion(), gameFromSnapshot.GetQuestion());
 
             // Simulating real game
             for (int i = 0; i < totalSteps; i++)
@@ -62,15 +74,17 @@ namespace Akinator.Core.Tests
                 }
 
                 // Simulating user choice
-                await game.Answer(_random.Next(0, 5));
+                await game.Answer(Random.Shared.Next(0, 5));
             }
+
+            Assert.NotEqual(game.GetStep(), gameFromSnapshot.GetStep());
 
             // Check that Back works
             await game.Back();
             var step = game.GetStep();
             Assert.Equal(totalSteps - 1, step);
 
-            await game.Answer(_random.Next(0, 5));
+            await game.Answer(Random.Shared.Next(0, 5));
             step = game.GetStep();
             Assert.Equal(totalSteps, step);
 

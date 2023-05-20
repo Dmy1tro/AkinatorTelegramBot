@@ -1,15 +1,15 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using Akinator.Api.Models;
-using Akinator.Api.Requests;
-using MediatR;
 using Newtonsoft.Json;
 using Telegram.Bot;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Akinator.Api.Handlers
 {
-    internal class StartHandler : IRequestHandler<StartRequest>
+    internal class StartHandler : ITelegramUpdateHandler
     {
         private readonly ITelegramBotClient _botClient;
 
@@ -18,25 +18,30 @@ namespace Akinator.Api.Handlers
             _botClient = botClient;
         }
 
-        public async Task<Unit> Handle(StartRequest request, CancellationToken cancellationToken)
+        public bool Support(Update update)
         {
-            const string whatBotDoes = "The bot will try to guess what you defined.";
+            return update.Type == UpdateType.Message &&
+                   update.Message!.Type == MessageType.Text &&
+                   update.Message.Text?.Trim() == "/start";
+        }
+
+        public async Task Handle(Update update, CancellationToken cancellation = default)
+        {
+            const string whatBotDoes = "The bot will try to define what you have guessed.";
 
             var inlineKeyboardMarkup = new InlineKeyboardMarkup(
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("Start a new game!", JsonConvert.SerializeObject(new CallbackData
                     {
-                        Request = StartNewGameRequest.RequestName
+                        Request = CallbackData.StartNewGameRequest
                     }))
                 });
 
-            await _botClient.SendTextMessageAsync(chatId: request.ChatId,
+            await _botClient.SendTextMessageAsync(chatId: update.Message.Chat.Id,
                                                   text: whatBotDoes,
                                                   replyMarkup: inlineKeyboardMarkup,
-                                                  cancellationToken: cancellationToken);
-
-            return Unit.Value;
+                                                  cancellationToken: cancellation);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -11,9 +12,9 @@ namespace Akinator.Core.Services
 {
     internal class AkinatorHttpClient : IAkinatorHttpClient
     {
-        private static readonly Regex _regexRegionUri = new(@"\[{""translated_theme_name"":""[\s\S]*"",""urlWs"":""https:\\\/\\\/srv[0-9]+\.akinator\.com:[0-9]+\\\/ws"",""subject_id"":""[0-9]+""}]");
-        private static readonly Regex _regexSession = new("var uid_ext_session = '(.*)';\\n.*var frontaddr = '(.*)';");
-        private static readonly Regex _regexCallbackResponse = new(@"^jQuery331023608747682107778_\d+\((.+)\)$");
+        private static readonly Regex _regexRegionUri = new(@"\[{""translated_theme_name"":""[\s\S]*"",""urlWs"":""https:\\\/\\\/srv[0-9]+\.akinator\.com:[0-9]+\\\/ws"",""subject_id"":""[0-9]+""}]", RegexOptions.Compiled, TimeSpan.FromSeconds(5));
+        private static readonly Regex _regexSession = new("var uid_ext_session = '(.*)';\\n.*var frontaddr = '(.*)';", RegexOptions.Compiled, TimeSpan.FromSeconds(5));
+        private static readonly Regex _regexCallbackResponse = new(@"jQuery\d+_\d+\(([\s\S]*?)\)$", RegexOptions.Compiled, TimeSpan.FromSeconds(5));
 
         private readonly HttpClient _httpClient;
 

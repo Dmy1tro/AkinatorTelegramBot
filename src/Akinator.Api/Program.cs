@@ -1,7 +1,7 @@
 ﻿using System;
+using Akinator.Api.Handlers;
 using Akinator.Api.Services;
 using Akinator.Core;
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot;
 
@@ -21,8 +21,13 @@ namespace Akinator.Api
             sp.AddAkinator();
             sp.AddHttpClient("telegram_client")
                 .AddTypedClient<ITelegramBotClient>(client => new TelegramBotClient(Configuration.BotToken, client));
-            sp.AddMediatR(typeof(Program));
-            sp.AddSingleton<GameStore>();
+
+            sp.AddTransient<ITelegramUpdateHandler, MakeAnswerHandler>()
+              .AddTransient<ITelegramUpdateHandler, StartHandler>()
+              .AddTransient<ITelegramUpdateHandler, StartNewGameHandler>()
+              .AddTransient<ITelegramUpdateHandler, ShowPossibleGuessesHandler>();
+
+            sp.AddSingleton<IGameStorage, GameStorage>();
             sp.AddSingleton<Worker>();
 
             return sp.BuildServiceProvider();

@@ -3,6 +3,7 @@ using Akinator.Core.Helpers;
 using Akinator.Core.Interfaces;
 using Akinator.Core.Models.AkinatorResponse;
 using Akinator.Core.Models.Game;
+using Newtonsoft.Json;
 
 namespace Akinator.Core.Services
 {
@@ -30,6 +31,11 @@ namespace Akinator.Core.Services
             gameState.StepInformation = startGameResponse.Parameters.StepInformation;
 
             return new AkinatorGame(_akinatorHttpClient, gameState);
+        }
+
+        public IAkinatorGame LoadGameFromSnapshot(GameSnapshot snapshot)
+        {
+            return new AkinatorGame(_akinatorHttpClient, snapshot.GameState.Copy());
         }
     }
 }

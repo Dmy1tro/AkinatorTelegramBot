@@ -1,22 +1,22 @@
 ﻿using System.Collections.Concurrent;
-using Akinator.Core.Interfaces;
+using Akinator.Core.Models.Game;
 
 namespace Akinator.Api.Services
 {
-    internal class GameStore
+    internal class GameStorage : IGameStorage
     {
-        private readonly ConcurrentDictionary<string, IAkinatorGame> _games = new();
+        private static readonly ConcurrentDictionary<string, string> _games = new();
 
-        public void Add(string key, IAkinatorGame game)
+        public void Save(string key, GameSnapshot snapshot)
         {
-            _games[key] = game;
+            _games[key] = snapshot.Serialize();
         }
 
-        public IAkinatorGame? Get(string key)
+        public GameSnapshot? Get(string key)
         {
-            if (_games.TryGetValue(key, out var game))
+            if (_games.TryGetValue(key, out var snapshot))
             {
-                return game;
+                return GameSnapshot.Deserialize(snapshot);
             }
 
             return null;

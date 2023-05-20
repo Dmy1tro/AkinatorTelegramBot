@@ -1,4 +1,5 @@
 ﻿using Akinator.Core.Models.AkinatorResponse;
+using Newtonsoft.Json;
 
 namespace Akinator.Core.Models.Game
 {
@@ -13,5 +14,10 @@ namespace Akinator.Core.Models.Game
         public Identification Identification { get; set; }
 
         public StepInformation StepInformation { get; set; }
+
+        public GameState Copy()
+        {
+            return JsonConvert.DeserializeObject<GameState>(JsonConvert.SerializeObject(this));
+        }
     }
 }

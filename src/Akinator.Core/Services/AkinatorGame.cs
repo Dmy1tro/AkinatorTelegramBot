@@ -6,6 +6,7 @@ using Akinator.Core.Helpers;
 using Akinator.Core.Interfaces;
 using Akinator.Core.Models.AkinatorResponse;
 using Akinator.Core.Models.Game;
+using Newtonsoft.Json;
 
 namespace Akinator.Core.Services
 {
@@ -82,12 +83,19 @@ namespace Akinator.Core.Services
             return guessedItems;
         }
 
+        public GameSnapshot CreateSnapshot()
+        {
+            // Prevent any unintended reference changes to the original object.
+            var state = _gameState.Copy();
+
+            return new GameSnapshot(state);
+        }
+
         private void ValidateStepResponse(StepResponse response)
         {
             if (!response.IsSuccess)
             {
-                // TODO: provide message.
-                throw new AkinatorException("Failed to proceed action.");
+                throw new AkinatorException($"Failed to proceed action. Response: {response.Completion}.");
             }
         }
     }
